@@ -1,6 +1,7 @@
 package com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.entity;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "orders")
@@ -13,6 +14,9 @@ public class Order {
     private String paypalOrderId;
     @Column(name = "paypal_order_status")
     private String paypalOrderStatus;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
 
     public Long getId() {
         return id;
@@ -36,5 +40,13 @@ public class Order {
 
     public void setPaypalOrderStatus(String paypalOrderStatus) {
         this.paypalOrderStatus = paypalOrderStatus;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 }

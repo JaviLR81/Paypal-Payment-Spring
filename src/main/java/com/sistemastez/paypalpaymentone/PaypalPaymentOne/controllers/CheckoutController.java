@@ -17,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = {"http://localhost:4200", "*"} )
 @RestController
@@ -57,6 +60,7 @@ public class CheckoutController {
         var entity = new Order();
         entity.setPaypalOrderId(orderResponse.getId());
         entity.setPaypalOrderStatus(orderResponse.getStatus().toString());
+        entity.setAmount(new BigDecimal(moneyDTO.getValue()));
         var out = orderDAO.save(entity);
 
         return ResponseEntity.ok(orderResponse);
