@@ -4,10 +4,11 @@ import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dao.IOrderDao;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.capture.CaptureResponseDTO;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.order.OrderDTO;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.order.OrderResponseDTO;
-import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.order.PayPalAppContextDTO;
+import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.order.PurchaseUnit;
+import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.dto.shared.MoneyDTO;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.entity.Order;
+import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.enums.OrderIntent;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.enums.OrderStatus;
-import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.enums.PaymentLandingPage;
 import com.sistemastez.paypalpaymentone.PaypalPaymentOne.models.service.PayPalHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
+@CrossOrigin(origins = {"http://localhost:4200", "*"} )
 @RestController
 @RequestMapping("/checkout")
 public class CheckoutController {
@@ -33,30 +35,40 @@ public class CheckoutController {
         this.payPalHttpClient = payPalHttpClient;
     }
 
-    @PostMapping
-    public ResponseEntity<OrderResponseDTO> checkout(@RequestBody OrderDTO orderDTO) throws Exception {
-        var appContext = new PayPalAppContextDTO();
-        appContext.setReturnUrl("http://localhost:8080/checkout/success");
-        appContext.setBrandName("My brand");
-        appContext.setLandingPage(PaymentLandingPage.BILLING);
-        orderDTO.setApplicationContext(appContext);
+    @PostMapping(value = "/create")
+    public ResponseEntity<OrderResponseDTO> checkout() throws Exception {
+        MoneyDTO moneyDTO = new MoneyDTO();
+        moneyDTO.setCurrencyCode("MXN");
+        // moneyDTO.setValue("1245.12");
+        moneyDTO.setValue(
+                String.valueOf(payPalHttpClient.getRandomNumber(1, 1000)).concat(".".concat(String.valueOf(payPalHttpClient.getRandomNumber(1, 100)))));
+
+        PurchaseUnit purchaseUnit = new PurchaseUnit();
+        purchaseUnit.setAmount(moneyDTO);
+
+        List<PurchaseUnit> list = List.of(purchaseUnit);
+
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setIntent(OrderIntent.CAPTURE);
+        orderDTO.setPurchaseUnits(list);
+
         var orderResponse = payPalHttpClient.createOrder(orderDTO);
 
         var entity = new Order();
         entity.setPaypalOrderId(orderResponse.getId());
         entity.setPaypalOrderStatus(orderResponse.getStatus().toString());
         var out = orderDAO.save(entity);
+
         return ResponseEntity.ok(orderResponse);
     }
 
-    @GetMapping(value = "/success")
-    public ResponseEntity<CaptureResponseDTO> paymentSuccess(HttpServletRequest request) throws Exception {
-        var orderId = request.getParameter("token");
-        var out = orderDAO.findByPaypalOrderId(orderId);
-        out.setPaypalOrderStatus(OrderStatus.APPROVED.toString());
-        orderDAO.save(out);
-
+    @PostMapping(value = "/capture/{orderId}")
+    public ResponseEntity<CaptureResponseDTO> paymentSuccess(@PathVariable String orderId) throws Exception {
         var captureResponse = payPalHttpClient.captureOrder(orderId);
+
+        var out = orderDAO.findByPaypalOrderId(orderId);
+        out.setPaypalOrderStatus(OrderStatus.COMPLETED.toString());
+        orderDAO.save(out);
 
         return new ResponseEntity<>(captureResponse, HttpStatus.OK);
     }

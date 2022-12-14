@@ -86,4 +86,8 @@ public class PayPalHttpClient {
         var input = paypalConfig.getClientId() + ":" + paypalConfig.getSecret();
         return "Basic " + Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
     }
+
+    public int getRandomNumber(int min, int max) {
+        return (int) ((Math.random() * (max - min)) + min);
+    }
 }

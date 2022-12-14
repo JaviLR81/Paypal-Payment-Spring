@@ -10,8 +10,6 @@ public class OrderDTO implements Serializable {
     private OrderIntent intent;
     @JsonProperty("purchase_units")
     private List<PurchaseUnit> purchaseUnits;
-    @JsonProperty("application_context")
-    private PayPalAppContextDTO applicationContext;
 
     public OrderIntent getIntent() {
         return intent;
@@ -27,13 +25,5 @@ public class OrderDTO implements Serializable {
 
     public void setPurchaseUnits(List<PurchaseUnit> purchaseUnits) {
         this.purchaseUnits = purchaseUnits;
-    }
-
-    public PayPalAppContextDTO getApplicationContext() {
-        return applicationContext;
-    }
-
-    public void setApplicationContext(PayPalAppContextDTO applicationContext) {
-        this.applicationContext = applicationContext;
     }
 }
