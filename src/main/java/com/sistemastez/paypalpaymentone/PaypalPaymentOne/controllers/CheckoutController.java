@@ -76,4 +76,12 @@ public class CheckoutController {
 
         return new ResponseEntity<>(captureResponse, HttpStatus.OK);
     }
+
+    // TODO: This method is not handle the DTO pattern just with the intention of doesn't
+    //  add complexity in the existing files that are mayority related to paypal development
+    @GetMapping(value = "/list-orders")
+    public ResponseEntity<?> listOrders() throws Exception {
+        List<Order> orders = (List<Order>) orderDAO.findAll();
+        return new ResponseEntity<>(orders, HttpStatus.OK);
+    }
 }
